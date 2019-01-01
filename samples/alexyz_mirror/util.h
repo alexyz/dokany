@@ -48,4 +48,7 @@ const WCHAR *CreateDispositionString(const ULONG v);
 //const WCHAR *ErrorString(const DWORD v);
 const WCHAR *NtCreateDispositionString(const ULONG v);
 
+LPBYTE newpage();
+void freepage(LPBYTE p);
+
 #endif

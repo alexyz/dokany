@@ -30,13 +30,13 @@ public:
 class vblob : public vfile {
 public:
 	std::vector<LPBYTE> pages;
-	INT64 length;
+	size_t length;
 	vblob(vdir* p, std::wstring n);
 	~vblob();
 	virtual vblob * blob();
 	virtual const std::wstring tos();
-	INT64 read(const LPBYTE buf, const INT64 off, const INT64 len);
-	void write(const LPBYTE buf, const INT64 off, const INT64 len);
+	size_t read(const LPBYTE buf, const size_t off, const size_t reqlen);
+	void write(const LPBYTE buf, const size_t off, const size_t len);
 	void truncate(const INT64 len);
 };
 

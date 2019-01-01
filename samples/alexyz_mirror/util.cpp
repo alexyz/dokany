@@ -9,6 +9,14 @@
 
 #include "util.h"
 
+LPBYTE newpage() {
+	return new BYTE[4096];
+}
+
+void freepage(LPBYTE p) {
+	delete p;
+}
+
 std::wstring NameString(const LPCWSTR path) {
 	std::vector<std::wstring> v = PathVector(path);
 	return v.size() > 0 ? v[v.size() - 1] : std::wstring();

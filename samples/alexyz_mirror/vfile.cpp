@@ -78,18 +78,26 @@ const std::wstring vdir::tos() {
 	return std::wstring(v);
 }
 
-INT64 vblob::read(const LPBYTE buf, const INT64 off, const INT64 len)
+size_t vblob::read(const LPBYTE buf, const size_t off, const size_t reqlen)
 {
-	wprintf(L"read %p, %lld, %lld\n", buf, off, len);
-	INT64 n;
-	for (n = 0; n < len; n++) {
-		INT64 i = off + n;
-		if (i < length) {
-			LPBYTE page = pages[i >> 12];
-			buf[n] = page ? page[i & 0xfff] : 0;
-		}
-		else {
-			break;
+	wprintf(L"read %p, %zd, %zd (pages: %zd length: %zd)\n", buf, off, reqlen, pages.size(), length);
+	size_t len = length >= off ? min(length - off, reqlen) : 0;
+	size_t n = 0;
+	if (len > 0) {
+		size_t p1 = off >> 12; // first page
+		size_t p2 = (off + len - 1) >> 12; // last page (inclusive)
+		for (size_t p = p1; p <= p2; p++) {
+			LPBYTE page = pages[p];
+			size_t i1 = p == p1 ? off & 0xfff : 0; // start index
+			size_t i2 = p == p2 ? ((off + len - 1) & 0xfff) + 1 : 0x1000; // end index (exclusive)
+			//wprintf(L"\tread p=%zd i1=%zd i2=%zd\n", p, i1, i2);
+			if (page) {
+				CopyMemory(buf + ((p - p1) << 12), page + i1, i2 - i1);
+			}
+			else {
+				ZeroMemory(buf + ((p - p1) << 12), i2 - i1);
+			}
+			n = n + (i2 - i1);
 		}
 	}
 	return n;
@@ -100,24 +108,31 @@ void vblob::truncate(const INT64 len) {
 	// 0->0, 1->1, 4096->1, 4097->2
 	size_t maxp = (len + 4095) >> 12; // pages required, first index of not required page
 	for (size_t p = maxp; p < pages.size(); p++) {
-		delete pages[p];
+		freepage(pages[p]);
 	}
 	wprintf(L"\tpages=%zd len=%lld -> pages=%zd len=%lld\n", pages.size(), length, maxp, len);
 	pages.resize(maxp, 0);
 	length = len;
 }
 
-void vblob::write(const LPBYTE buf, const INT64 off, const INT64 len)
+void vblob::write(const LPBYTE buf, const size_t off, const size_t len)
 {
-	wprintf(L"write %p, %lld, %lld\n", buf, off, len);
 	truncate(max(length, off + len));
-	for (INT64 n = 0; n < len; n++) {
-		INT64 i = off + n;
-		LPBYTE page = pages[i >> 12];
-		if (!page) {
-			pages[i >> 12] = page = new BYTE[4096];
+	wprintf(L"write %p, %zd, %zd (pages: %zd length: %zd)\n", buf, off, len, pages.size(), length);
+	if (len > 0) {
+		size_t p1 = off >> 12;
+		size_t p2 = (off + len - 1) >> 12;
+
+		for (size_t p = p1; p <= p2; p++) {
+			LPBYTE page = pages[p];
+			if (!page) {
+				pages[p] = page = newpage();
+			}
+			size_t i1 = p == p1 ? off & 0xfff : 0;
+			size_t i2 = p == p2 ? ((off + len - 1) & 0xfff) + 1 : 0x1000;
+			//wprintf(L"\twrite p=%zd i1=%zd i2=%zd\n", p, i1, i2);
+			CopyMemory(page + i1, buf + ((p - p1) << 12), i2 - i1);
 		}
-		page[i & 0xfff] = buf[n];
 	}
 }
 
