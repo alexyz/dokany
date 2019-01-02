@@ -792,7 +792,7 @@ int __cdecl wmain (ULONG argc, PWCHAR argv[]) {
 	InitializeCriticalSection(&lock);
 
 	StringCbCopyW(volumename, sizeof(volumename), L"ALEXYZ");
-	StringCbCopyW(fsname, sizeof(fsname), L"MEM");
+	StringCbCopyW(fsname, sizeof(fsname), L"NTFS");
 
 	if (argc < 3) {
 		wprintf(L"insufficient arguments\n");
@@ -897,7 +897,7 @@ int __cdecl wmain (ULONG argc, PWCHAR argv[]) {
 		wprintf(L"Control Handler is not set.\n");
 	}
 
-	options.Options |= DOKAN_OPTION_ALT_STREAM;
+	//options.Options |= DOKAN_OPTION_ALT_STREAM;
 
 	DOKAN_OPERATIONS operations;
 	ZeroMemory(&operations, sizeof(operations));

@@ -159,7 +159,7 @@ std::pair<vdir*,vfile*> vdir::findpath (const LPCWSTR path)
 	for (size_t n = 0; n < pathv.size(); n++) {
 		//wprintf(L"\tn=%zd d=%s f=%s\n", n, d ? d->tos().c_str() : 0, f ? f->tos().c_str() : 0);
 		//d = dynamic_cast<vdir*>(f);
-		d = f->dir();
+		d = f ? f->dir() : 0;
 		f = d ? d->find(pathv[n]) : 0;
 	}
 
